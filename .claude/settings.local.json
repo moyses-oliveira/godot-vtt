@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe\" --headless --path \"C:\\\\godot\\\\sandbox\" --check-only --quit)",
+      "Bash(\"C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe\" --headless --path \"C:\\\\godot\\\\sandbox\" scenes/main.tscn)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(tasklist *)"
+    ]
+  }
+}

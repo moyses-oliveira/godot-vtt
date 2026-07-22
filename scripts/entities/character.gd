@@ -17,7 +17,7 @@ signal trap_triggered(cell)
 
 const COLLISION_RADIUS = 30.0
 const SPRITE_MARGIN = 8.0
-const DEFAULT_TEXTURE_PATH = "res://resources/charactes/helmet-svgrepo-com.svg"
+const DEFAULT_TEXTURE_PATH = "res://resources/characters/helmet-svgrepo-com.svg"
 
 var mover: GridMover
 var sprite: Sprite2D

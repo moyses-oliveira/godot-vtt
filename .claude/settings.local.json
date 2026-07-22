@@ -8,7 +8,14 @@
       "Bash(tasklist *)",
       "Bash(\"C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe\" --headless --path \"C:\\\\godot\\\\sandbox\" --editor --quit)",
       "Bash(powershell -Command \"Test-NetConnection -ComputerName 127.0.0.1 -Port 8080 -InformationLevel Quiet\")",
-      "Bash(C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe *)"
+      "Bash(C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe *)",
+      "Bash(\"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --check-only --path .)",
+      "Bash(\"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --quit --path .)",
+      "Bash(tee __TRACKED_VAR__/godot_validate.log)",
+      "Read(//c/Users/carol/AppData/Local/Temp/claude/C--godot-sandbox/4c1766f8-2112-4ac7-8d19-d4bcc5cf2c10/scratchpad/**)",
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --quit --path .)",
+      "Bash(timeout 30 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --editor --quit-after 3 --path .)",
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --script \"C:/Users/carol/AppData/Local/Temp/claude/C--godot-sandbox/4c1766f8-2112-4ac7-8d19-d4bcc5cf2c10/scratchpad/test_parse.gd\" 2>&1)"
     ]
   }
 }

@@ -2,13 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b8f2bb6qy2u3g" path="res://scenes/main.gd" id="1_o6xl0"]
 [ext_resource type="Script" uid="uid://w6jl73bnxyws" path="res://scenes/grid_2d.gd" id="2_tipki"]
-[ext_resource type="Script" uid="uid://ceyeobmuewft" path="res://scenes/player1.gd" id="3_85g3d"]
-[ext_resource type="Texture2D" uid="uid://c75jrp57x4wfs" path="res://icon.svg" id="4_choun"]
-[ext_resource type="Script" uid="uid://biwte13xus3je" path="res://scenes/icon.gd" id="5_ya4ey"]
-[ext_resource type="Texture2D" uid="uid://b1fqm004jq6y8" path="res://resources/charactes/Sniper_shooter/rotations/south.png" id="6_tefeu"]
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_2py4y"]
-radius = 30.0
+[ext_resource type="Script" uid="uid://cw4tcch40j1hj" path="res://scripts/mechanics/camera/camera_pan.gd" id="8_camerapan"]
 
 [node name="Main" type="Node2D" unique_id=1965695320]
 script = ExtResource("1_o6xl0")
@@ -16,24 +10,8 @@ script = ExtResource("1_o6xl0")
 [node name="Grid2d" type="Node2D" parent="." unique_id=1163577882]
 script = ExtResource("2_tipki")
 
+[node name="Camera2D" type="Camera2D" parent="." unique_id=-192028725]
+position = Vector2(640, 384)
+script = ExtResource("8_camerapan")
+
 [node name="Characters" type="Node2D" parent="." unique_id=578705938]
-
-[node name="Player1" type="Area2D" parent="Characters" unique_id=1844634494]
-position = Vector2(70, 70)
-script = ExtResource("3_85g3d")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Characters/Player1" unique_id=1784149362]
-position = Vector2(0, -1)
-shape = SubResource("CircleShape2D_2py4y")
-
-[node name="South" type="Sprite2D" parent="Characters/Player1" unique_id=2055637545]
-position = Vector2(2, -1)
-texture = ExtResource("6_tefeu")
-
-[node name="icon" type="Node2D" parent="." unique_id=1382401770]
-visible = false
-script = ExtResource("5_ya4ey")
-
-[node name="Icon" type="Sprite2D" parent="icon" unique_id=216685456]
-visible = false
-texture = ExtResource("4_choun")

@@ -5,7 +5,10 @@
       "Bash(\"C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe\" --headless --path \"C:\\\\godot\\\\sandbox\" scenes/main.tscn)",
       "Bash(kill %1)",
       "Bash(wait)",
-      "Bash(tasklist *)"
+      "Bash(tasklist *)",
+      "Bash(\"C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe\" --headless --path \"C:\\\\godot\\\\sandbox\" --editor --quit)",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName 127.0.0.1 -Port 8080 -InformationLevel Quiet\")",
+      "Bash(C:\\\\godot\\\\engine\\\\Godot_v4.7.1-stable_win64.exe *)"
     ]
   }
 }

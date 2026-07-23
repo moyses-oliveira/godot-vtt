@@ -13,12 +13,14 @@ extends RefCounted
 ##   prepare_game.finished.connect(...)
 ##   prepare_game.run(self, $map/Characters)
 ##
-## Fluxo: baixa resources/fakers/players.json (via PlayerRosterLoader), cria
-## um Character por jogador em uma celula distinta do grid e dispara o
-## download do avatar de cada um (via RemoteTextureLoader). "character_spawned"
-## e emitido assim que o node existe na arvore (antes mesmo do avatar
-## terminar de carregar), para que main.gd possa conectar o clique sem
-## precisar esperar a rede.
+## Fluxo: baixa resources/fakers/players.json e resources/fakers/enemies.json
+## (via PlayerRosterLoader - inimigo e so um PlayerData com TEAM.ENEMY, ja
+## que e um personagem controlado por gatilhos do backend em vez de input
+## local), cria um Character por entrada em uma celula distinta do grid
+## (aliados numa ponta, inimigos na outra) e dispara o download do avatar
+## de cada um (via RemoteTextureLoader). "character_spawned" e emitido assim
+## que o node existe na arvore (antes mesmo do avatar terminar de carregar),
+## para que main.gd possa conectar o clique sem precisar esperar a rede.
 ##
 ## O parametro "host" de run() nao e sobre "pertencer a cena": e apenas o
 ## ponto de fixacao que o Godot exige para os HTTPRequest funcionarem (eles
@@ -27,41 +29,53 @@ extends RefCounted
 signal character_spawned(character: Character)
 signal finished
 
-const DEFAULT_ROSTER_URL = "http://127.0.0.1:8081/players.json"
+const DEFAULT_ROSTER_URL = "http://127.0.0.1:8080/players.json"
+const DEFAULT_ENEMY_ROSTER_URL = "http://127.0.0.1:8080/enemies.json"
 const DEFAULT_MOVEMENT_RANGE = 5
-const SPAWN_COLUMN = 1
+const ALLY_SPAWN_COLUMN = 1
+const ENEMY_SPAWN_COLUMN = 18
 
 var roster_url: String
+var enemy_roster_url: String
 
 var _pending_avatars := 0
+var _pending_rosters := 0
 
-func _init(p_roster_url: String = DEFAULT_ROSTER_URL) -> void:
+func _init(p_roster_url: String = DEFAULT_ROSTER_URL, p_enemy_roster_url: String = DEFAULT_ENEMY_ROSTER_URL) -> void:
 	roster_url = p_roster_url
+	enemy_roster_url = p_enemy_roster_url
 
 func run(host: Node, characters_container: Node) -> void:
+	_pending_rosters = 2
+	_load_roster(host, characters_container, roster_url, PlayerData.Team.ALLY, ALLY_SPAWN_COLUMN)
+	_load_roster(host, characters_container, enemy_roster_url, PlayerData.Team.ENEMY, ENEMY_SPAWN_COLUMN)
+
+func _load_roster(host: Node, characters_container: Node, url: String, team: PlayerData.Team, spawn_column: int) -> void:
 	var loader := PlayerRosterLoader.new()
 	host.add_child(loader)
-	loader.roster_ready.connect(_on_roster_ready.bind(host, characters_container, loader))
+	loader.roster_ready.connect(_on_roster_ready.bind(host, characters_container, loader, spawn_column))
 	loader.load_failed.connect(_on_roster_failed.bind(loader))
-	loader.load_from_url(roster_url)
+	loader.load_from_url(url, team)
 
-func _on_roster_ready(players: Array[PlayerData], host: Node, characters_container: Node, loader: PlayerRosterLoader) -> void:
+func _on_roster_ready(players: Array[PlayerData], host: Node, characters_container: Node, loader: PlayerRosterLoader, spawn_column: int) -> void:
 	loader.queue_free()
+	_pending_rosters -= 1
 
-	if players.is_empty():
-		finished.emit()
-		return
-
-	_pending_avatars = players.size()
+	_pending_avatars += players.size()
 	for index in players.size():
-		_spawn_player(players[index], index, host, characters_container)
+		_spawn_player(players[index], index, host, characters_container, spawn_column)
+
+	_check_finished()
 
 # Cada personagem nasce numa celula diferente (mesma coluna, linha = indice
-# do jogador na lista) para nao empilhar todo mundo no mesmo tile.
-func _spawn_player(player: PlayerData, index: int, host: Node, characters_container: Node) -> void:
+# do jogador na lista) para nao empilhar todo mundo no mesmo tile; aliados e
+# inimigos usam colunas diferentes para nao empilhar entre si tambem.
+func _spawn_player(player: PlayerData, index: int, host: Node, characters_container: Node, spawn_column: int) -> void:
 	var movement_range := player.movement_points if player.movement_points > 0 else DEFAULT_MOVEMENT_RANGE
-	var character := Character.new(movement_range)
-	character.place_at_cell(Vector2i(SPAWN_COLUMN, index))
+	var character := Character.new(movement_range, player.team)
+	character.set_attacks(player.attacks)
+	character.set_hp(player.hp, player.maxHp)
+	character.place_at_cell(Vector2i(spawn_column, index))
 	characters_container.add_child(character)
 	character_spawned.emit(character)
 
@@ -87,10 +101,14 @@ func _on_avatar_failed(reason: String, loader: RemoteTextureLoader) -> void:
 
 func _on_avatar_done() -> void:
 	_pending_avatars -= 1
-	if _pending_avatars <= 0:
-		finished.emit()
+	_check_finished()
 
 func _on_roster_failed(reason: String, loader: PlayerRosterLoader) -> void:
 	push_warning("PrepareGame: %s" % reason)
 	loader.queue_free()
-	finished.emit()
+	_pending_rosters -= 1
+	_check_finished()
+
+func _check_finished() -> void:
+	if _pending_rosters <= 0 and _pending_avatars <= 0:
+		finished.emit()

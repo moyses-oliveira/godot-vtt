@@ -14,13 +14,21 @@ extends Area2D
 
 signal clicked(character)
 signal trap_triggered(cell)
+signal hp_changed(hp: int, max_hp: int)
+signal defeated(character)
 
 const COLLISION_RADIUS = 30.0
 const SPRITE_MARGIN = 8.0
 const DEFAULT_TEXTURE_PATH = "res://resources/characters/helmet-svgrepo-com.svg"
+const ENEMY_TINT = Color(1.0, 0.55, 0.55)
 
 var mover: GridMover
 var sprite: Sprite2D
+
+var team: PlayerData.Team = PlayerData.Team.ALLY
+var attacks: Array[AttackData] = []
+var hp: int = 0
+var max_hp: int = 0
 
 var grid_position: Vector2i:
 	get: return mover.grid_position
@@ -28,7 +36,8 @@ var grid_position: Vector2i:
 var movement: int:
 	get: return mover.movement_range
 
-func _init(movement_range: int = 5) -> void:
+func _init(movement_range: int = 5, p_team: PlayerData.Team = PlayerData.Team.ALLY) -> void:
+	team = p_team
 	_build_collision_shape()
 	_build_mover(movement_range)
 	_build_sprite()
@@ -53,6 +62,8 @@ func _build_mover(movement_range: int) -> void:
 func _build_sprite() -> void:
 	sprite = Sprite2D.new()
 	sprite.texture = load(DEFAULT_TEXTURE_PATH)
+	if team == PlayerData.Team.ENEMY:
+		sprite.modulate = ENEMY_TINT
 	add_child(sprite)
 
 ## Posiciona o personagem em uma celula do grid, ja atualizando sua
@@ -63,6 +74,19 @@ func place_at_cell(cell: Vector2i) -> void:
 
 func move_to(path: Array[Vector2i], pathfinder: GridPathfinder) -> void:
 	mover.move_along_path(path, pathfinder)
+
+func set_attacks(new_attacks: Array[AttackData]) -> void:
+	attacks = new_attacks
+
+func set_hp(current_hp: int, maximum_hp: int) -> void:
+	hp = current_hp
+	max_hp = maximum_hp
+
+func take_damage(amount: int) -> void:
+	hp = maxi(hp - amount, 0)
+	hp_changed.emit(hp, max_hp)
+	if hp <= 0:
+		defeated.emit(self)
 
 ## Troca a aparencia do personagem. Quem chama isso nao precisa saber que
 ## por baixo existe um Sprite2D - so pede para o personagem trocar sua

@@ -29,8 +29,13 @@ func is_trap(cell: Vector2i) -> bool:
 	return cell in traps
 
 ## Retorna um MovementRange com todas as celulas alcancaveis a partir de
-## "origin" dentro de "move_range" passos ortogonais, contornando obstaculos.
-func compute_reachable(origin: Vector2i, move_range: int) -> MovementRange:
+## "origin" dentro de "move_range" passos ortogonais, contornando obstaculos
+## fixos do cenario e "occupied_cells" - celulas ocupadas por outros
+## personagens no momento da chamada, tratadas como bloqueio solido (nao da
+## pra atravessar nem pra parar em cima). E passado por fora (em vez de
+## guardado em "obstacles") porque quem esta em pe muda a cada turno,
+## diferente do cenario.
+func compute_reachable(origin: Vector2i, move_range: int, occupied_cells: Array[Vector2i] = []) -> MovementRange:
 	var distance = {origin: 0}
 	var came_from: Dictionary = {}
 	var queue: Array[Vector2i] = [origin]
@@ -45,7 +50,7 @@ func compute_reachable(origin: Vector2i, move_range: int) -> MovementRange:
 
 		for dir in DIRECTIONS:
 			var neighbor = current + dir
-			if not is_within_bounds(neighbor) or is_obstacle(neighbor) or distance.has(neighbor):
+			if not is_within_bounds(neighbor) or is_obstacle(neighbor) or neighbor in occupied_cells or distance.has(neighbor):
 				continue
 
 			distance[neighbor] = current_dist + 1

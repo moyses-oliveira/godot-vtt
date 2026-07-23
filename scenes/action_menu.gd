@@ -10,13 +10,16 @@ extends Control
 ##   $UI/ActionMenu.open()
 
 signal move_requested
+signal attack_requested
 signal end_turn_requested
 
 @onready var _move_button: Button = $VBoxContainer/MoveButton
+@onready var _attack_button: Button = $VBoxContainer/AttackButton
 @onready var _end_turn_button: Button = $VBoxContainer/EndTurnButton
 
 func _ready() -> void:
 	_move_button.pressed.connect(_on_move_pressed)
+	_attack_button.pressed.connect(_on_attack_pressed)
 	_end_turn_button.pressed.connect(_on_end_turn_pressed)
 	close()
 
@@ -28,6 +31,9 @@ func close() -> void:
 
 func _on_move_pressed() -> void:
 	move_requested.emit()
+
+func _on_attack_pressed() -> void:
+	attack_requested.emit()
 
 func _on_end_turn_pressed() -> void:
 	print("fim de turno")

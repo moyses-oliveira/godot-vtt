@@ -15,7 +15,18 @@
       "Read(//c/Users/carol/AppData/Local/Temp/claude/C--godot-sandbox/4c1766f8-2112-4ac7-8d19-d4bcc5cf2c10/scratchpad/**)",
       "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --quit --path .)",
       "Bash(timeout 30 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --editor --quit-after 3 --path .)",
-      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --script \"C:/Users/carol/AppData/Local/Temp/claude/C--godot-sandbox/4c1766f8-2112-4ac7-8d19-d4bcc5cf2c10/scratchpad/test_parse.gd\" 2>&1)"
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --script \"C:/Users/carol/AppData/Local/Temp/claude/C--godot-sandbox/4c1766f8-2112-4ac7-8d19-d4bcc5cf2c10/scratchpad/test_parse.gd\" 2>&1)",
+      "Bash(\"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --quit)",
+      "Bash(\"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --editor --quit)",
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . scenes/main.tscn)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"players.json: %{http_code}\\\\n\" http://127.0.0.1:8080/players.json)",
+      "Bash(curl -s -o /dev/null -w \"enemies.json: %{http_code}\\\\n\" http://127.0.0.1:8080/enemies.json)",
+      "Bash(curl -s -o /dev/null -w \"avatar: %{http_code}\\\\n\" http://127.0.0.1:8080/characters/sniper-shotter.png)",
+      "Bash(curl -s http://127.0.0.1:8080/enemies.json)",
+      "Bash(curl -s http://127.0.0.1:8080/players.json)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --quit)"
     ]
   }
 }

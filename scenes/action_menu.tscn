@@ -7,7 +7,7 @@ layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -96.0
+offset_top = -136.0
 offset_bottom = -16.0
 offset_left = 16.0
 offset_right = 216.0
@@ -26,6 +26,10 @@ grow_vertical = 2
 [node name="MoveButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Mover"
+
+[node name="AttackButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Atacar"
 
 [node name="EndTurnButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2

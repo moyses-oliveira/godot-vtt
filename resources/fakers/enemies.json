@@ -1,0 +1,62 @@
+[
+	{
+		"userToken": "1a9f4c2e-7b3d-4e5a-9c1f-6d2b8e0a4f11",
+		"character": {
+			"name": "Cultista Renegado",
+			"hp": 9,
+			"baseHp": 9,
+			"maxHp": 9,
+			"mp": 6,
+			"baseMp": 6,
+			"maxMp": 6,
+			"movementPoints": 4,
+			"avatar": "http://127.0.0.1:8080/characters/soldier.png",
+			"attacks": [
+				{
+					"name": "Faca enferrujada",
+					"aim": 75,
+					"targetRange": 1,
+					"damageRange": { "min": 2, "max": 4 },
+					"targets": 1
+				},
+				{
+					"name": "Pistola improvisada",
+					"aim": 55,
+					"targetRange": 6,
+					"damageRange": { "min": 3, "max": 6 },
+					"targets": 1
+				}
+			]
+		}
+	},
+	{
+		"userToken": "8e2d6a4b-3f7c-4a1e-8b5d-2c9f0e6a7d33",
+		"character": {
+			"name": "Brutamontes Blindado",
+			"hp": 16,
+			"baseHp": 16,
+			"maxHp": 16,
+			"mp": 4,
+			"baseMp": 4,
+			"maxMp": 4,
+			"movementPoints": 3,
+			"avatar": "http://127.0.0.1:8080/characters/sniper-shotter.png",
+			"attacks": [
+				{
+					"name": "Golpe de porrete",
+					"aim": 65,
+					"targetRange": 1,
+					"damageRange": { "min": 6, "max": 10 },
+					"targets": 1
+				},
+				{
+					"name": "Investida",
+					"aim": 50,
+					"targetRange": 3,
+					"damageRange": { "min": 4, "max": 8 },
+					"targets": 2
+				}
+			]
+		}
+	}
+]

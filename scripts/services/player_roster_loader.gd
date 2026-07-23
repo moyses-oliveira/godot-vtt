@@ -15,10 +15,16 @@ extends HTTPRequest
 signal roster_ready(players: Array[PlayerData])
 signal load_failed(reason: String)
 
+var _team: PlayerData.Team = PlayerData.Team.ALLY
+
 func _ready() -> void:
 	request_completed.connect(_on_request_completed)
 
-func load_from_url(url: String) -> void:
+## "team" marca se as entradas baixadas sao aliados (players.json) ou
+## inimigos (enemies.json) - o JSON em si nao carrega essa informacao,
+## quem sabe e quem escolheu a URL.
+func load_from_url(url: String, team: PlayerData.Team = PlayerData.Team.ALLY) -> void:
+	_team = team
 	var error := request(url)
 	if error != OK:
 		load_failed.emit("Nao foi possivel iniciar o download (%s): %s" % [url, error])
@@ -30,12 +36,12 @@ func _on_request_completed(result: int, response_code: int, _headers: PackedStri
 
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_ARRAY:
-		load_failed.emit("Resposta de players.json nao e uma lista valida")
+		load_failed.emit("Resposta do roster nao e uma lista valida")
 		return
 
 	var players: Array[PlayerData] = []
 	for entry in parsed:
 		if typeof(entry) == TYPE_DICTIONARY:
-			players.append(PlayerData.from_dict(entry))
+			players.append(PlayerData.from_dict(entry, _team))
 
 	roster_ready.emit(players)

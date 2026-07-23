@@ -7,6 +7,7 @@ const HEIGHT = 12
 const CELL_SIZE = 64
 
 const RANGE_COLOR = Color(0.4, 1.0, 0.4, 0.35)
+const ATTACK_RANGE_COLOR = Color(1.0, 0.35, 0.35, 0.45)
 const HOVER_COLOR = Color(0.4, 0.8, 1.0, 0.5)
 const OBSTACLE_COLOR = Color(0.15, 0.15, 0.15, 0.9)
 const TRAP_COLOR = Color(1.0, 0.329, 0.0, 0.149)
@@ -27,6 +28,7 @@ const SELECTED_GLOW_SPEED = 3.0
 var pathfinder: GridPathfinder
 
 var _range: MovementRange
+var _attack_cells: Array[Vector2i] = []
 var hover_cell := Vector2i(-1, -1)
 var hover_path: Array[Vector2i] = []
 var _pulse_time := 0.0
@@ -68,6 +70,11 @@ func _draw():
 			var color = HOVER_COLOR if cell == hover_cell else RANGE_COLOR
 			draw_rect(Rect2(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE), color)
 
+	# celulas dos inimigos alcancaveis pelo ataque selecionado
+	for cell in _attack_cells:
+		var color = HOVER_COLOR if cell == hover_cell else ATTACK_RANGE_COLOR
+		draw_rect(Rect2(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE), color)
+
 	# brilho dourado pulsante no tile do personagem selecionado
 	if _range:
 		var pulse = (sin(_pulse_time * SELECTED_GLOW_SPEED) + 1.0) / 2.0
@@ -92,9 +99,12 @@ func _draw():
 			draw_circle(cell_center(cell), 5.0, GUIDE_LINE_COLOR)
 
 func _unhandled_input(event):
-	if not _range:
-		return
+	if _range:
+		_handle_movement_input(event)
+	elif not _attack_cells.is_empty():
+		_handle_attack_input(event)
 
+func _handle_movement_input(event) -> void:
 	if event is InputEventMouseMotion:
 		var cell = get_cell_from_local_pos(get_local_mouse_position())
 		if _range.contains(cell):
@@ -112,14 +122,39 @@ func _unhandled_input(event):
 			if _range.contains(cell):
 				tile_clicked.emit(cell)
 
+# Modo de ataque nao tem caminho a percorrer, entao so precisa saber se a
+# celula sob o mouse e um dos alvos validos - sem MovementRange envolvido.
+func _handle_attack_input(event) -> void:
+	if event is InputEventMouseMotion:
+		var cell = get_cell_from_local_pos(get_local_mouse_position())
+		var new_hover = cell if cell in _attack_cells else Vector2i(-1, -1)
+		if new_hover != hover_cell:
+			hover_cell = new_hover
+			queue_redraw()
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var cell = get_cell_from_local_pos(get_local_mouse_position())
+			if cell in _attack_cells:
+				tile_clicked.emit(cell)
+
 func get_cell_from_local_pos(pos: Vector2) -> Vector2i:
 	return Vector2i(floori(pos.x / CELL_SIZE), floori(pos.y / CELL_SIZE))
 
 func cell_center(cell: Vector2i) -> Vector2:
 	return Vector2(cell.x * CELL_SIZE + CELL_SIZE / 2, cell.y * CELL_SIZE + CELL_SIZE / 2)
 
-func show_movement_range(origin: Vector2i, move_range: int) -> void:
-	_range = pathfinder.compute_reachable(origin, move_range)
+func show_movement_range(origin: Vector2i, move_range: int, occupied_cells: Array[Vector2i] = []) -> void:
+	_range = pathfinder.compute_reachable(origin, move_range, occupied_cells)
+	_attack_cells = []
+	hover_cell = Vector2i(-1, -1)
+	hover_path = []
+	queue_redraw()
+
+## Recebe as celulas ja filtradas por AttackTargeting (so os inimigos
+## dentro do alcance do ataque escolhido) e as destaca como clicaveis.
+func show_attack_targets(cells: Array[Vector2i]) -> void:
+	_attack_cells = cells
+	_range = null
 	hover_cell = Vector2i(-1, -1)
 	hover_path = []
 	queue_redraw()
@@ -131,6 +166,7 @@ func build_path_to(cell: Vector2i) -> Array[Vector2i]:
 
 func clear_highlight() -> void:
 	_range = null
+	_attack_cells = []
 	hover_cell = Vector2i(-1, -1)
 	hover_path = []
 	queue_redraw()

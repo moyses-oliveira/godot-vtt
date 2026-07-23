@@ -3,18 +3,60 @@
 		"userToken": "766df515-62a6-4a0f-8848-32efd53f1747",
 		"character": {
 			"name": "Elias",
-			"pvs": 10,
+			"hp": 10,
+			"baseHp": 10,
+			"maxHp": 10,
+			"mp": 10,
+			"baseMp": 10,
+			"maxMp": 10,
 			"movementPoints": 5,
-			"avatar": "http://127.0.0.1:8081/characters/sniper-shotter.png"
+			"avatar": "http://127.0.0.1:8080/characters/sniper-shotter.png",
+			"attacks": [
+				{
+					"name": "Tiro de precisão",
+					"aim": 85,
+					"targetRange": 8,
+					"damageRange": { "min": 4, "max": 7 },
+					"targets": 1
+				},
+				{
+					"name": "Rajada",
+					"aim": 60,
+					"targetRange": 5,
+					"damageRange": { "min": 2, "max": 4 },
+					"targets": 3
+				}
+			]
 		}
 	},
 	{
 		"userToken": "faddf515-62a6-4a0f-8848-32efd53f1747",
 		"character": {
 			"name": "Tião",
-			"pvs": 8,
-			"movementPoints": 7,
-			"avatar": "http://127.0.0.1:8081/characters/soldier.png"
+			"hp": 8,
+			"baseHp": 8,
+			"maxHp": 10,
+			"mp": 12,
+			"baseMp": 12,
+			"maxMp": 15,
+			"movementPoints": 6,
+			"avatar": "http://127.0.0.1:8080/characters/soldier.png",
+			"attacks": [
+				{
+					"name": "Coronhada",
+					"aim": 90,
+					"targetRange": 1,
+					"damageRange": { "min": 3, "max": 5 },
+					"targets": 1
+				},
+				{
+					"name": "Granada",
+					"aim": 70,
+					"targetRange": 6,
+					"damageRange": { "min": 5, "max": 9 },
+					"targets": 4
+				}
+			]
 		}
 	}
 ]

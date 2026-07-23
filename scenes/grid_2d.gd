@@ -7,7 +7,8 @@ const HEIGHT = 12
 const CELL_SIZE = 64
 
 const RANGE_COLOR = Color(0.4, 1.0, 0.4, 0.35)
-const ATTACK_RANGE_COLOR = Color(1.0, 0.35, 0.35, 0.45)
+const ATTACK_RANGE_COLOR = Color(0.6, 0.2, 0.85, 0.45)
+const ATTACK_PREVIEW_COLOR = Color(0.6, 0.2, 0.85, 0.25)
 const HOVER_COLOR = Color(0.4, 0.8, 1.0, 0.5)
 const OBSTACLE_COLOR = Color(0.15, 0.15, 0.15, 0.9)
 const TRAP_COLOR = Color(1.0, 0.329, 0.0, 0.149)
@@ -18,6 +19,12 @@ const SELECTED_GLOW_MIN_ALPHA = 0.12
 const SELECTED_GLOW_MAX_ALPHA = 0.4
 const SELECTED_GLOW_SPEED = 3.0
 
+const SHADOW_LAYER_SCENE := preload("res://scenes/components/tile_shadow_layer.tscn")
+
+const MOVEMENT_SHADOW := "movement_range"
+const ATTACK_SHADOW := "attack_range"
+const ATTACK_PREVIEW_SHADOW := "attack_preview"
+
 @export var obstacles: Array[Vector2i] = [
 	Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3)
 ]
@@ -27,6 +34,12 @@ const SELECTED_GLOW_SPEED = 3.0
 
 var pathfinder: GridPathfinder
 
+# O highlight de celulas (alcance de movimento, alvos de ataque, previa de
+# ataque, hover) e todo delegado ao plugin TileShadowLayer - o Grid2d so
+# guarda o estado que precisa para logica de jogo (range para pathing,
+# _attack_cells para saber o que e clicavel).
+var _shadow_layer: TileShadowLayer
+
 var _range: MovementRange
 var _attack_cells: Array[Vector2i] = []
 var hover_cell := Vector2i(-1, -1)
@@ -35,6 +48,12 @@ var _pulse_time := 0.0
 
 func _ready():
 	pathfinder = GridPathfinder.new(WIDTH, HEIGHT, obstacles, traps)
+
+	_shadow_layer = SHADOW_LAYER_SCENE.instantiate()
+	_shadow_layer.cell_size = CELL_SIZE
+	_shadow_layer.z_index = -1
+	add_child(_shadow_layer)
+
 	queue_redraw()
 
 func _process(delta):
@@ -63,17 +82,6 @@ func _draw():
 	# obstaculos (bloqueiam movimento)
 	for cell in obstacles:
 		draw_rect(Rect2(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE), OBSTACLE_COLOR)
-
-	# quadrados de alcance de movimento
-	if _range:
-		for cell in _range.cells:
-			var color = HOVER_COLOR if cell == hover_cell else RANGE_COLOR
-			draw_rect(Rect2(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE), color)
-
-	# celulas dos inimigos alcancaveis pelo ataque selecionado
-	for cell in _attack_cells:
-		var color = HOVER_COLOR if cell == hover_cell else ATTACK_RANGE_COLOR
-		draw_rect(Rect2(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE), color)
 
 	# brilho dourado pulsante no tile do personagem selecionado
 	if _range:
@@ -111,10 +119,12 @@ func _handle_movement_input(event) -> void:
 			if cell != hover_cell:
 				hover_cell = cell
 				hover_path = _range.build_path_to(cell)
+				_shadow_layer.set_hover(cell, HOVER_COLOR)
 				queue_redraw()
 		elif hover_cell != Vector2i(-1, -1):
 			hover_cell = Vector2i(-1, -1)
 			hover_path = []
+			_shadow_layer.clear_hover()
 			queue_redraw()
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -130,6 +140,10 @@ func _handle_attack_input(event) -> void:
 		var new_hover = cell if cell in _attack_cells else Vector2i(-1, -1)
 		if new_hover != hover_cell:
 			hover_cell = new_hover
+			if hover_cell == Vector2i(-1, -1):
+				_shadow_layer.clear_hover()
+			else:
+				_shadow_layer.set_hover(hover_cell, HOVER_COLOR)
 			queue_redraw()
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -148,16 +162,40 @@ func show_movement_range(origin: Vector2i, move_range: int, occupied_cells: Arra
 	_attack_cells = []
 	hover_cell = Vector2i(-1, -1)
 	hover_path = []
+	_shadow_layer.clear_shadow(ATTACK_SHADOW)
+	_shadow_layer.clear_shadow(ATTACK_PREVIEW_SHADOW)
+	_shadow_layer.set_shadow(MOVEMENT_SHADOW, _range.cells, RANGE_COLOR)
+	_shadow_layer.clear_hover()
 	queue_redraw()
 
-## Recebe as celulas ja filtradas por AttackTargeting (so os inimigos
-## dentro do alcance do ataque escolhido) e as destaca como clicaveis.
+## Recebe todas as celulas dentro do target_range do ataque escolhido
+## (ja calculadas por AttackTargeting.cells_in_range) e as destaca como
+## clicaveis - a sombra mostra a area de alcance inteira, nao so onde ha
+## inimigos em pe.
 func show_attack_targets(cells: Array[Vector2i]) -> void:
 	_attack_cells = cells
 	_range = null
 	hover_cell = Vector2i(-1, -1)
 	hover_path = []
+	_shadow_layer.clear_shadow(MOVEMENT_SHADOW)
+	_shadow_layer.clear_shadow(ATTACK_PREVIEW_SHADOW)
+	_shadow_layer.set_shadow(ATTACK_SHADOW, cells, ATTACK_RANGE_COLOR)
+	_shadow_layer.clear_hover()
 	queue_redraw()
+
+## Sombra somente visual do target_range de um ataque, usada ao passar o
+## mouse sobre um ataque no menu antes de confirma-lo - nao afeta _range
+## nem _attack_cells, entao nao muda como cliques no tabuleiro sao tratados.
+## Esconde a area de movimento enquanto a previa estiver ativa, para nao
+## misturar as duas sombras na tela.
+func show_attack_preview(cells: Array[Vector2i]) -> void:
+	_shadow_layer.clear_shadow(MOVEMENT_SHADOW)
+	_shadow_layer.set_shadow(ATTACK_PREVIEW_SHADOW, cells, ATTACK_PREVIEW_COLOR)
+
+func clear_attack_preview() -> void:
+	_shadow_layer.clear_shadow(ATTACK_PREVIEW_SHADOW)
+	if _range:
+		_shadow_layer.set_shadow(MOVEMENT_SHADOW, _range.cells, RANGE_COLOR)
 
 func build_path_to(cell: Vector2i) -> Array[Vector2i]:
 	if not _range:
@@ -169,4 +207,5 @@ func clear_highlight() -> void:
 	_attack_cells = []
 	hover_cell = Vector2i(-1, -1)
 	hover_path = []
+	_shadow_layer.clear_all()
 	queue_redraw()

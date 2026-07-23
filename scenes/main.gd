@@ -4,6 +4,7 @@ enum Mode { MOVE, ATTACK }
 
 var selected
 var _mode: Mode = Mode.MOVE
+var _selected_attack: AttackData
 
 # PrepareGame e uma classe comum (RefCounted), nao um node - por isso
 # precisa ficar guardada aqui. Sem essa referencia, nada mais na arvore de
@@ -14,7 +15,9 @@ func _ready():
 
 	$map/Grid2d.tile_clicked.connect(_on_tile_clicked)
 	$UI/ActionMenu.move_requested.connect(_on_move_requested)
-	$UI/ActionMenu.attack_requested.connect(_on_attack_requested)
+	$UI/ActionMenu.attack_hover_requested.connect(_on_attack_hover_requested)
+	$UI/ActionMenu.attack_hover_cleared.connect(_on_attack_hover_cleared)
+	$UI/ActionMenu.attack_selected.connect(_on_attack_selected)
 	$UI/ActionMenu.end_turn_requested.connect(_on_end_turn_requested)
 
 	_prepare_game = PrepareGame.new()
@@ -44,13 +47,16 @@ func _select_next_character():
 func _select_character(character):
 	selected = character
 	_mode = Mode.MOVE
+	_selected_attack = null
 	$map/Grid2d.show_movement_range(character.grid_position, character.movement, _occupied_cells(character))
 	$map/Camera2D.center_on(character.position)
+	$UI/ActionMenu.set_attacks(character.attacks)
 	$UI/ActionMenu.open()
 
 func _deselect_character():
 	selected = null
 	_mode = Mode.MOVE
+	_selected_attack = null
 	$map/Grid2d.clear_highlight()
 	$UI/ActionMenu.close()
 
@@ -83,41 +89,45 @@ func _on_move_requested():
 	$map/Grid2d.show_movement_range(selected.grid_position, selected.movement, _occupied_cells(selected))
 	$UI/ActionMenu.close()
 
-# Usa sempre o primeiro ataque do personagem selecionado - escolher entre
-# multiplos ataques fica para uma proxima iteracao da UI.
-func _on_attack_requested():
-	if selected == null or selected.attacks.is_empty():
+# Ao passar o mouse sobre um ataque no menu, mostra so a sombra da area de
+# alcance (sem trocar de modo) - o jogador ainda pode mover normalmente se
+# desistir do hover sem clicar.
+func _on_attack_hover_requested(attack: AttackData) -> void:
+	if selected == null:
+		return
+	$map/Grid2d.show_attack_preview(_attack_range_cells(selected, attack))
+
+func _on_attack_hover_cleared() -> void:
+	$map/Grid2d.clear_attack_preview()
+
+func _on_attack_selected(attack: AttackData) -> void:
+	if selected == null:
 		return
 
 	_mode = Mode.ATTACK
-	var attack: AttackData = selected.attacks[0]
-	var enemies := _characters_of_opposite_team(selected)
-	var targets := AttackTargeting.targets_in_range(selected.grid_position, attack.target_range, enemies)
-
-	var target_cells: Array[Vector2i] = []
-	for target in targets:
-		target_cells.append(target.grid_position)
-
-	$map/Grid2d.show_attack_targets(target_cells)
+	_selected_attack = attack
+	$map/Grid2d.show_attack_targets(_attack_range_cells(selected, attack))
 	$UI/ActionMenu.close()
+
+# Sombra do target_range do ataque - toda a area de alcance a partir do
+# personagem, e nao so as celulas onde ha inimigos em pe.
+func _attack_range_cells(character: Character, attack: AttackData) -> Array[Vector2i]:
+	var pathfinder: GridPathfinder = $map/Grid2d.pathfinder
+	var cells: Array[Vector2i] = []
+	for cell in AttackTargeting.cells_in_range(character.grid_position, attack.target_range):
+		if pathfinder.is_within_bounds(cell):
+			cells.append(cell)
+	return cells
 
 func _resolve_attack(cell: Vector2i) -> void:
 	var target := _character_at(cell)
 	if target == null or target.team == selected.team:
 		return
 
-	var attack: AttackData = selected.attacks[0]
-	if randi_range(1, 100) <= attack.aim:
-		target.take_damage(randi_range(attack.damage_min, attack.damage_max))
+	if randi_range(1, 100) <= _selected_attack.aim:
+		target.take_damage(randi_range(_selected_attack.damage_min, _selected_attack.damage_max))
 
 	_deselect_character()
-
-func _characters_of_opposite_team(character: Character) -> Array[Character]:
-	var result: Array[Character] = []
-	for node in $map/Characters.get_children():
-		if node is Character and node.team != character.team:
-			result.append(node)
-	return result
 
 func _occupied_cells(excluding: Character) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []

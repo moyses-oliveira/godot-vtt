@@ -26,7 +26,8 @@
       "Bash(curl -s http://127.0.0.1:8080/enemies.json)",
       "Bash(curl -s http://127.0.0.1:8080/players.json)",
       "Bash(echo \"exit: $?\")",
-      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --quit)"
+      "Bash(timeout 15 \"/c/godot/engine/Godot_v4.7.1-stable_win64.exe\" --headless --path . --quit)",
+      "Bash(grep -v \"\\\\.import$\\\\|\\\\.uid$\")"
     ]
   }
 }
